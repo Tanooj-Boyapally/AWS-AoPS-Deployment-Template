@@ -1,0 +1,17 @@
+name: Hello World Test
+
+on:
+  push:   # Run whenever you push to this repo
+    branches:
+      - main
+
+jobs:
+  hello-job:
+    runs-on: self-hosted   # This makes it run on your machine runner
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Print Hello World
+        run: echo "Hello World from self-hosted runner!"
+
