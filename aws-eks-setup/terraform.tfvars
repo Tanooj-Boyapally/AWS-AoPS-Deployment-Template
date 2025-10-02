@@ -21,8 +21,4 @@ min_capacity        = 1
 alb_controller_version = "1.8.1"
 
 # AWS EBS CSI Driver Configuration
-<<<<<<< HEAD
 ebs_csi_driver_version = "2.28.0"
-=======
-ebs_csi_driver_version = "2.28.0"
->>>>>>> 2eb9405 (updated the latest file for eks setup in AWS)
