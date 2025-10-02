@@ -1,0 +1,33 @@
+name: Destroy EKS Cluster
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  eks_destroy:
+    runs-on: self-hosted
+    environment: destroy  # Requires manual approval
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Verify Terraform is Available
+        run: |
+          which terraform
+          /usr/local/bin/terraform version
+
+      - name: Terraform Init
+        working-directory: ./aws_terraform_template_eks
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: /usr/local/bin/terraform init
+
+      - name: Terraform Destroy
+        working-directory: ./aws_terraform_template_eks
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: /usr/local/bin/terraform destroy -auto-approve
