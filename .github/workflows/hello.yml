@@ -1,7 +1,10 @@
 name: Setup Terraform and Deploy EKS
 
 on:
-  workflow_dispatch:  # Only runs when manually triggered from GitHub UI
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Also allows manual trigger
 
 jobs:
   setup:
@@ -12,10 +15,9 @@ jobs:
 
       - name: Install Terraform
         run: |
-          # Check if terraform is already installed
           if command -v terraform &> /dev/null; then
             echo "Terraform is already installed"
-            /usr/local/bin/terraform --version || terraform version
+            /usr/local/bin/terraform version || terraform version
           else
             echo "Installing Terraform..."
             TERRAFORM_VERSION="1.9.8"
@@ -27,14 +29,11 @@ jobs:
             rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
             echo "Terraform installed successfully"
           fi
-          
-          # Verify installation using full path
           /usr/local/bin/terraform version
 
   eks_setup:
     runs-on: self-hosted
-    # NO needs: setup - completely independent
-    environment: production  # Requires manual approval
+    environment: production
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
