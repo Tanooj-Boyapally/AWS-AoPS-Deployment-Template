@@ -1,4 +1,4 @@
-name: Hello World Test
+name: Setup Terraform
 
 on:
   push:
@@ -6,11 +6,24 @@ on:
       - main
 
 jobs:
-  hello-job:
+  setup:
     runs-on: self-hosted
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Print Hello World
-        run: echo "Hello World from self-hosted runner!"
+      - name: Install Terraform
+        run: |
+          # Download Terraform
+          TERRAFORM_VERSION="1.9.8"
+          wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+          
+          # Unzip and install
+          unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+          sudo mv terraform /usr/local/bin/
+          
+          # Clean up
+          rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+          
+          # Verify installation
+          terraform --version
