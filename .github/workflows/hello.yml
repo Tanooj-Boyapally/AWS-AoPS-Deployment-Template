@@ -15,42 +15,55 @@ jobs:
           # Check if terraform is already installed
           if command -v terraform &> /dev/null; then
             echo "Terraform is already installed"
-            terraform --version
+            /usr/local/bin/terraform --version || terraform version
           else
             echo "Installing Terraform..."
             TERRAFORM_VERSION="1.9.8"
+            cd /tmp
             wget -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
             unzip -o terraform_${TERRAFORM_VERSION}_linux_amd64.zip
             sudo mv terraform /usr/local/bin/
+            sudo chmod +x /usr/local/bin/terraform
             rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
             echo "Terraform installed successfully"
           fi
           
-          # Verify installation
-          terraform --version
+          # Verify installation using full path
+          /usr/local/bin/terraform version
 
   eks_setup:
     runs-on: self-hosted
-    needs: setup
+    # NO needs: setup - completely independent
     environment: production  # Requires manual approval
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Configure AWS Credentials
+      - name: Verify Terraform is Available
         run: |
-          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          export AWS_DEFAULT_REGION=${{ secrets.AWS_REGION }}
+          which terraform
+          /usr/local/bin/terraform version
 
       - name: Terraform Init
         working-directory: ./aws_terraform_template_eks
-        run: terraform init
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: /usr/local/bin/terraform init
 
       - name: Terraform Plan
         working-directory: ./aws_terraform_template_eks
-        run: terraform plan
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: /usr/local/bin/terraform plan
 
       - name: Terraform Apply
         working-directory: ./aws_terraform_template_eks
-        run: terraform apply -auto-approve
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: /usr/local/bin/terraform apply -auto-approve
