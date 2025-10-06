@@ -363,7 +363,7 @@ jobs:
 
   deploy_applications:
     runs-on: self-hosted
-    needs: deploy_configmaps
+    # needs: deploy_configmaps
     environment: production
     steps:
       - name: Checkout repository
