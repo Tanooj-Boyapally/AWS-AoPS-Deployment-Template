@@ -81,3 +81,42 @@ jobs:
           
   #         # Display cluster info
   #         kubectl cluster-info
+
+  k8s_namespace_setup:
+    runs-on: self-hosted
+    needs: setup
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure kubectl for EKS
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          # Update kubeconfig for the EKS cluster
+          aws eks --region us-east-1 update-kubeconfig --name devops-cluster
+          echo "Kubeconfig updated successfully"
+
+      - name: Verify kubectl connection
+        run: |
+          # Verify kubectl can connect to the cluster
+          kubectl get nodes
+          echo "Successfully connected to EKS cluster"
+
+      - name: Create namespace
+        run: |
+          # Create namespace if it doesn't exist
+          if kubectl get namespace aws-eoc &> /dev/null; then
+            echo "Namespace 'aws-eoc' already exists"
+          else
+            kubectl create namespace aws-eoc
+            echo "Namespace 'aws-eoc' created successfully"
+          fi
+
+      - name: Verify namespace
+        run: |
+          kubectl get namespace aws-eoc
+          echo "Namespace verification complete"
