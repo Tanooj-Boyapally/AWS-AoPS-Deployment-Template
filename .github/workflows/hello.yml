@@ -334,6 +334,7 @@ jobs:
         run: |
           # Update kubeconfig for the EKS cluster
           aws eks --region us-east-1 update-kubeconfig --name devops-cluster
+          kubectl config set-context --current --namespace=aws-eoc
           echo "Kubeconfig updated successfully"
 
       - name: Deploy ConfigMaps

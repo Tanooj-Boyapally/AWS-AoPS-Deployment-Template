@@ -69,6 +69,7 @@ items:
     annotations:
       kubectl.kubernetes.io/last-applied-configuration: |
     name: muaops-ui-env
+    namespace: aws-eoc
 kind: List
 metadata:
   resourceVersion: ""
