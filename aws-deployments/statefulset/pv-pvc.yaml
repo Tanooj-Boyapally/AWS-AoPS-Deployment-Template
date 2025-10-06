@@ -25,7 +25,7 @@ spec:
   csi:
     driver: ebs.csi.aws.com
     fsType: ext4
-    volumeHandle: vol-0ccb56926a25e2761
+    volumeHandle: %ebs_volume%
     volumeAttributes:
       # These should match your Terraform configuration
       type: gp3

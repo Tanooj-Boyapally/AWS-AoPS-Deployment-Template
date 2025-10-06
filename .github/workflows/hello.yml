@@ -243,8 +243,8 @@ jobs:
           
           echo "Retrieved Volume ID: $VOLUME_ID"
           
-          # Replace the volumeHandle in the PV-PVC YAML
-          sed -i "s|volumeHandle:.*|volumeHandle: $VOLUME_ID|g" aws-deployments/statefulset/pv-pvc.yaml
+          # Replace the placeholder with actual volume ID
+          sed -i "s|volumeHandle: %ebs_volume%|volumeHandle: $VOLUME_ID|g" aws-deployments/statefulset/pv-pvc.yaml
           
           echo "Updated pv-pvc.yaml with Volume ID: $VOLUME_ID"
           
