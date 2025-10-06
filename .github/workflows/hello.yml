@@ -209,3 +209,69 @@ jobs:
             echo "Verifying StorageClass..."
             kubectl get storageclass
             echo "StorageClass verification complete"
+  
+
+  deploy_pv_pvc:
+    runs-on: self-hosted
+    needs: deploy_storageclass
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure kubectl for EKS
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          # Update kubeconfig for the EKS cluster
+          aws eks --region us-east-1 update-kubeconfig --name devops-cluster
+          echo "Kubeconfig updated successfully"
+
+      - name: Get EBS Volume ID and Update PV
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          # Fetch the volume ID from AWS
+          VOLUME_ID=$(aws ec2 describe-volumes \
+            --filters "Name=tag:Name,Values=mongodb-data-1" \
+            --query "Volumes[0].VolumeId" \
+            --output text)
+          
+          echo "Retrieved Volume ID: $VOLUME_ID"
+          
+          # Replace the volumeHandle in the PV-PVC YAML
+          sed -i "s|volumeHandle:.*|volumeHandle: $VOLUME_ID|g" aws-deployments/statefulset/pv-pvc.yaml
+          
+          echo "Updated pv-pvc.yaml with Volume ID: $VOLUME_ID"
+          
+          # Display the updated section for verification
+          echo "Updated PV configuration:"
+          grep -A 2 "volumeHandle:" aws-deployments/statefulset/pv-pvc.yaml
+
+      - name: Deploy PV and PVC
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          echo "Applying PV and PVC configuration..."
+          kubectl apply -f aws-deployments/statefulset/pv-pvc.yaml
+          echo "PV and PVC applied successfully"
+
+      - name: Verify PV and PVC
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          echo "Verifying PersistentVolume..."
+          kubectl get pv mongodb-pv
+          
+          echo "Verifying PersistentVolumeClaim..."
+          kubectl get pvc mongodb-pvc -n aws-eoc
+          
+          echo "PV and PVC verification complete"
