@@ -277,9 +277,50 @@ jobs:
   #         echo "PV and PVC verification complete"
 
 
-  deploy_statefulset:
+  # deploy_statefulset:
+  #   runs-on: self-hosted
+  #   # needs: deploy_pv_pvc
+  #   environment: production
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Configure kubectl for EKS
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         # Update kubeconfig for the EKS cluster
+  #         aws eks --region us-east-1 update-kubeconfig --name devops-cluster
+  #         echo "Kubeconfig updated successfully"
+
+  #     - name: Deploy StatefulSet
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         echo "Applying StatefulSet configuration..."
+  #         kubectl apply -f aws-deployments/statefulset/statefulset.yaml
+  #         echo "StatefulSet applied successfully"
+
+  #     - name: Verify StatefulSet
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         echo "Verifying StatefulSet..."
+  #         kubectl get statefulset -n aws-eoc
+          
+  #         echo "Verifying Pods..."
+  #         kubectl get pods -n aws-eoc
+          
+  #         echo "StatefulSet verification complete"
+
+  deploy_configmaps:
     runs-on: self-hosted
-    # needs: deploy_pv_pvc
     environment: production
     steps:
       - name: Checkout repository
@@ -295,26 +336,26 @@ jobs:
           aws eks --region us-east-1 update-kubeconfig --name devops-cluster
           echo "Kubeconfig updated successfully"
 
-      - name: Deploy StatefulSet
+      - name: Deploy ConfigMaps
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
         run: |
-          echo "Applying StatefulSet configuration..."
-          kubectl apply -f aws-deployments/statefulset/statefulset.yaml
-          echo "StatefulSet applied successfully"
+          echo "Applying all ConfigMaps..."
+          kubectl apply -f aws-deployments/configmap/
+          echo "All ConfigMaps applied successfully"
 
-      - name: Verify StatefulSet
+      - name: Verify ConfigMaps
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
         run: |
-          echo "Verifying StatefulSet..."
-          kubectl get statefulset -n aws-eoc
+          echo "Verifying ConfigMaps..."
+          kubectl get configmap -n aws-eoc
           
-          echo "Verifying Pods..."
-          kubectl get pods -n aws-eoc
+          echo "Listing all ConfigMaps in detail..."
+          kubectl get configmap -n aws-eoc -o wide
           
-          echo "StatefulSet verification complete"
+          echo "ConfigMap verification complete"
