@@ -7,29 +7,29 @@ on:
   workflow_dispatch:  # Also allows manual trigger
 
 jobs:
-  setup:
-    runs-on: self-hosted
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  # setup:
+  #   runs-on: self-hosted
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
 
-      - name: Install Terraform
-        run: |
-          if command -v terraform &> /dev/null; then
-            echo "Terraform is already installed"
-            /usr/local/bin/terraform version || terraform version
-          else
-            echo "Installing Terraform..."
-            TERRAFORM_VERSION="1.9.8"
-            cd /tmp
-            wget -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-            unzip -o terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-            sudo mv terraform /usr/local/bin/
-            sudo chmod +x /usr/local/bin/terraform
-            rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-            echo "Terraform installed successfully"
-          fi
-          /usr/local/bin/terraform version
+  #     - name: Install Terraform
+  #       run: |
+  #         if command -v terraform &> /dev/null; then
+  #           echo "Terraform is already installed"
+  #           /usr/local/bin/terraform version || terraform version
+  #         else
+  #           echo "Installing Terraform..."
+  #           TERRAFORM_VERSION="1.9.8"
+  #           cd /tmp
+  #           wget -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+  #           unzip -o terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+  #           sudo mv terraform /usr/local/bin/
+  #           sudo chmod +x /usr/local/bin/terraform
+  #           rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+  #           echo "Terraform installed successfully"
+  #         fi
+  #         /usr/local/bin/terraform version
 
   # eks_setup:
   #   runs-on: self-hosted
@@ -319,8 +319,51 @@ jobs:
           
   #         echo "StatefulSet verification complete"
 
-  deploy_configmaps:
+  # deploy_configmaps:
+  #   runs-on: self-hosted
+  #   environment: production
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Configure kubectl for EKS
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         # Update kubeconfig for the EKS cluster
+  #         aws eks --region us-east-1 update-kubeconfig --name devops-cluster
+  #         kubectl config set-context --current --namespace=aws-eoc
+  #         echo "Kubeconfig updated successfully"
+
+  #     - name: Deploy ConfigMaps
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         echo "Applying all ConfigMaps..."
+  #         kubectl apply -f aws-deployments/configmap/
+  #         echo "All ConfigMaps applied successfully"
+
+  #     - name: Verify ConfigMaps
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         echo "Verifying ConfigMaps..."
+  #         kubectl get configmap -n aws-eoc
+          
+  #         echo "Listing all ConfigMaps in detail..."
+  #         kubectl get configmap -n aws-eoc -o wide
+          
+  #         echo "ConfigMap verification complete"
+
+  deploy_applications:
     runs-on: self-hosted
+    needs: deploy_configmaps
     environment: production
     steps:
       - name: Checkout repository
@@ -337,26 +380,29 @@ jobs:
           kubectl config set-context --current --namespace=aws-eoc
           echo "Kubeconfig updated successfully"
 
-      - name: Deploy ConfigMaps
+      - name: Deploy Applications and Services
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
         run: |
-          echo "Applying all ConfigMaps..."
-          kubectl apply -f aws-deployments/configmap/
-          echo "All ConfigMaps applied successfully"
+          echo "Applying all Deployments and Services..."
+          kubectl apply -f aws-deployments/deploy/
+          echo "All Deployments and Services applied successfully"
 
-      - name: Verify ConfigMaps
+      - name: Verify Deployments and Services
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
         run: |
-          echo "Verifying ConfigMaps..."
-          kubectl get configmap -n aws-eoc
+          echo "Verifying Deployments..."
+          kubectl get deployments -n aws-eoc
           
-          echo "Listing all ConfigMaps in detail..."
-          kubectl get configmap -n aws-eoc -o wide
+          echo "Verifying Services..."
+          kubectl get services -n aws-eoc
           
-          echo "ConfigMap verification complete"
+          echo "Verifying Pods..."
+          kubectl get pods -n aws-eoc -o wide
+          
+          echo "Application deployment verification complete"
