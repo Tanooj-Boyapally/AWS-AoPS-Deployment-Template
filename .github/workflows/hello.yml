@@ -120,95 +120,95 @@ jobs:
   #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
   #       run: /usr/local/bin/terraform apply -auto-approve
 
-  k8s_namespace_setup:
-    runs-on: self-hosted
-    needs: setup
-    environment: production
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  # k8s_namespace_setup:
+  #   runs-on: self-hosted
+  #   needs: setup
+  #   environment: production
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
 
-      - name: Configure kubectl for EKS
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          # Update kubeconfig for the EKS cluster
-          aws eks --region us-east-1 update-kubeconfig --name devops-cluster
-          echo "Kubeconfig updated successfully"
+  #     - name: Configure kubectl for EKS
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         # Update kubeconfig for the EKS cluster
+  #         aws eks --region us-east-1 update-kubeconfig --name devops-cluster
+  #         echo "Kubeconfig updated successfully"
 
-      - name: Verify kubectl connection
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          # Verify kubectl can connect to the cluster
-          kubectl get nodes
-          echo "Successfully connected to EKS cluster"
+  #     - name: Verify kubectl connection
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         # Verify kubectl can connect to the cluster
+  #         kubectl get nodes
+  #         echo "Successfully connected to EKS cluster"
 
-      - name: Create namespace
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          # Create namespace if it doesn't exist
-          if kubectl get namespace aws-eoc &> /dev/null; then
-            echo "Namespace 'aws-eoc' already exists"
-          else
-            kubectl create namespace aws-eoc
-            echo "Namespace 'aws-eoc' created successfully"
-          fi
+  #     - name: Create namespace
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         # Create namespace if it doesn't exist
+  #         if kubectl get namespace aws-eoc &> /dev/null; then
+  #           echo "Namespace 'aws-eoc' already exists"
+  #         else
+  #           kubectl create namespace aws-eoc
+  #           echo "Namespace 'aws-eoc' created successfully"
+  #         fi
 
-      - name: Verify namespace
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          kubectl get namespace aws-eoc
-          echo "Namespace verification complete"
+  #     - name: Verify namespace
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         kubectl get namespace aws-eoc
+  #         echo "Namespace verification complete"
 
 
-  deploy_storageclass:
-      runs-on: self-hosted
-      needs: k8s_namespace_setup
-      environment: production
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v3
+  # deploy_storageclass:
+  #     runs-on: self-hosted
+  #     needs: k8s_namespace_setup
+  #     environment: production
+  #     steps:
+  #       - name: Checkout repository
+  #         uses: actions/checkout@v3
 
-        - name: Configure kubectl for EKS
-          env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-          run: |
-            # Update kubeconfig for the EKS cluster
-            aws eks --region us-east-1 update-kubeconfig --name devops-cluster
-            echo "Kubeconfig updated successfully"
+  #       - name: Configure kubectl for EKS
+  #         env:
+  #           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #         run: |
+  #           # Update kubeconfig for the EKS cluster
+  #           aws eks --region us-east-1 update-kubeconfig --name devops-cluster
+  #           echo "Kubeconfig updated successfully"
 
-        - name: Deploy StorageClass
-          env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-          run: |
-            echo "Applying StorageClass configuration..."
-            kubectl apply -f aws-deployments/storageclass/storageclass.yaml
-            echo "StorageClass applied successfully"
+  #       - name: Deploy StorageClass
+  #         env:
+  #           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #         run: |
+  #           echo "Applying StorageClass configuration..."
+  #           kubectl apply -f aws-deployments/storageclass/storageclass.yaml
+  #           echo "StorageClass applied successfully"
 
-        - name: Verify StorageClass
-          env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-          run: |
-            echo "Verifying StorageClass..."
-            kubectl get storageclass
-            echo "StorageClass verification complete"
+  #       - name: Verify StorageClass
+  #         env:
+  #           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #         run: |
+  #           echo "Verifying StorageClass..."
+  #           kubectl get storageclass
+  #           echo "StorageClass verification complete"
   
 
   deploy_pv_pvc:
