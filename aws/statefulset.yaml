@@ -1,0 +1,163 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: mongo-version-8
+  namespace: aws-eoc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      role: mongo-new
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        role: mongo-new
+    spec:
+      # ADD THIS SECTION - Node affinity to match EBS volume AZ
+      nodeSelector:
+        topology.kubernetes.io/zone: us-east-1b
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: topology.kubernetes.io/zone
+                operator: In
+                values:
+                - us-east-1b  # This matches your PV's node affinity
+      volumes:
+        - name: mongo-pv-storage
+          persistentVolumeClaim:
+            claimName: mongodb-pvc
+      containers:
+        - name: mongo
+          image: mongo:8.0
+          command:
+            - mongod
+            - '--bind_ip'
+            - 0.0.0.0
+          ports:
+            - containerPort: 27017
+              protocol: TCP
+          resources:
+            limits:
+              cpu: '1'
+              memory: 2Gi
+            requests:
+              cpu: '1'
+              memory: 1Gi
+          volumeMounts:
+            - name: mongo-pv-storage
+              mountPath: /data/db
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - '-c'
+                  - >
+                    apt-get update; 
+
+                    apt-get install git -qy; 
+
+                    git clone
+                    https://musigma:Crunchdata\!@gitlab.ird.mu-sigma.com/muAoPS/aops-application.git; 
+
+                    sleep 15; 
+
+                    cd /aops-application/db; 
+
+                    ls -lrt; 
+
+                    sleep 10; 
+
+
+                    # Wait for MongoDB to be ready
+
+                    echo "Waiting for MongoDB to be ready..."
+
+                    until mongosh --eval "db.adminCommand('ping')" >/dev/null
+                    2>&1; do
+                      sleep 2
+                    done
+
+                    echo "MongoDB is ready!"
+
+
+                    # Add error handling for each script
+
+                    mongosh --nodb --quiet --eval "var
+                    connection='localhost:27017/admin',
+                    mongoAdminUsername='admin', mongoAdminPassword='admin',
+                    dbName='admin' " create-admin-user.js || echo "Admin user
+                    script failed, continuing...";
+
+
+                    mongosh admin -u admin -p admin --eval
+                    "db.getSiblingDB('global').createUser({user: 'sa', pwd:
+                    'pw', roles: [{ role:'root', db:'admin'}]})" || echo "Global
+                    user creation failed, continuing...";
+
+
+                    mongosh --nodb --quiet --eval "var
+                    connection='localhost:27017/admin',
+                    mongoAdminUsername='admin', mongoAdminPassword='admin',
+                    dbAdminUsername='sa', dbAdminPassword='pw', dbName='global'
+                    " global-dbscript.js || echo "Global script failed,
+                    continuing...";
+
+
+                    mongosh --nodb --quiet --eval "var
+                    connection='localhost:27017/admin',
+                    mongoAdminUsername='admin', mongoAdminPassword='admin',
+                    dbAdminUsername='sa1', dbAdminPassword='pw1',
+                    dbName='tenant-admin' " create-database-user.js || echo
+                    "Database user script failed, continuing...";
+
+
+                    mongosh --nodb --quiet --eval "var
+                    connection='localhost:27017/admin',
+                    mongoAdminUsername='admin', mongoAdminPassword='admin',
+                    dbAdminUsername='sa1', dbAdminPassword='pw1',
+                    dbName='tenant-admin' " mupdna-dbscript.js || echo "Mupdna
+                    script failed, continuing...";
+
+
+                    echo "Database initialization completed with possible
+                    errors";
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  serviceName: mongo-new
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+  revisionHistoryLimit: 10
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-version-8-svc
+  namespace: aws-eoc
+  labels:
+    app: mongo
+spec:
+  type: NodePort
+  selector:
+    role: mongo-new
+  ports:
+    - port: 27017          # MongoDB default port
+      targetPort: 27017
+      protocol: TCP

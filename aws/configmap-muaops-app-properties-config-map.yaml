@@ -1,0 +1,230 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: muaops-app-properties-config-map
+  namespace: aws-eoc
+data:
+  app-properties.yml: >
+    eoc_database: 'eoc'
+
+    createEoCUser: true
+
+    aops_domain_name: "https://74.225.32.54/aops-rest/"
+
+    cookiePath: "/"
+
+    front_end_url: "https://azure.eoc.mu-sigma.com/aops/"
+
+    use_force_ssl: false
+
+    http_port_no: "8090"
+
+    https_port_no: "9443"
+
+    scheduler_http_port: 8000
+
+    scheduler_https_port: 8001
+
+    product_support:
+      email: "product.support@mu-sigma.com"
+    mailer_host_address: "10.1.2.73"
+
+    email_id_check: false
+
+    mailer_port_no: "25"
+
+    config_mailer_from: "muAoPS Admin<muAoPSadmin@mu-sigma.com>"
+
+    log_file_path: "/mulogger.log"
+
+    max_file_size: 2097152
+
+    max_no_of_files: 5
+
+    session_timeout_server: 120
+
+    idleprovider_idle: 1795
+
+    idleprovider_timeout: 5
+
+    keepaliveprovider_interval: 1800
+
+    authentication_type: "combination"
+
+    url: "ldap://172.25.1.46:389"
+
+    adminDn: "cn=Directory Manager"
+
+    adminPassword: "password"
+
+    searchBase: "ou=users,dc=ird,dc=mu-sigma,dc=com"
+
+    searchFilter:
+    "(&(objectClass=organizationalPerson)(|(cn={{username}})(mail={{username}})))"
+
+    memberOf: "memberOf"
+
+    username: "cn"
+
+    instance_name: "aops"
+
+    login_type: "local"
+
+    admin_email: ""
+
+    admin_id: ""
+
+    algo_cutoff: "0.1"
+
+    enable_account_lockout: "none"
+
+    account_lockout_duration: 15
+
+    invalid_attempts_check_window: 15
+
+    account_lockout_threshold: 3
+
+    enable_superadmin_account_lockout: false
+
+    automatic_account_creation: true
+
+    piwik_report_need: false
+
+    piwik_location: ""
+
+    piwik_id: ""
+
+    default_group: ['DeliveryEngine']
+
+    reference_catalog_required: true
+
+    learning_repo_hostname: 'https://aops1.mu-sigma.com/'
+
+    learning_repo_port: 'LearningRepository/'
+
+    is_learning_repo: false
+
+    resource_id: "AOPS-REST-DEV"
+
+
+    oidc_clientId: ''
+
+    oidc_clientSecret: ''
+
+    oidc_issuer_uri: ''
+
+    oidc_authorize_uri: ''
+
+    oidc_token_uri: ''
+
+    oidc_check_token_uri : ''
+
+    oidc_userDetails_uri : ''
+
+    oidc_redirect_uri : ''
+
+    oidc_logout_uri: ''
+
+
+    phoenix_oauth_service :
+    "https://eoc.mu-sigma.com/phoenix/oauth-service"
+
+    phoenix_quick_link :
+    "https://eoc.mu-sigma.com/phoenix/eoc-rest/quick-link/all"
+
+    phoenix_sso_clientId : "AOPS-UI"
+
+    phoenix_sso_clientSecret : "AOPS-SECRET"
+
+    phoenix_auth_cookie: "phnxUsername"
+
+    is_monkey: true
+
+    phoenix_oauth2_uri: "https://qa.ird.mu-sigma.com/phoenix/oauth-service/"
+
+    phoenix_oauth2_authorize_uri:
+    "https://qa.ird.mu-sigma.com/phoenix/oauth-service/oauth/authorize"
+
+    phoenix_oauth2_token_uri:
+    "https://qa.ird.mu-sigma.com/phoenix/oauth-service/oauth/token"
+
+    phoenix_oauth2_check_token_uri :
+    "https://qa.ird.mu-sigma.com/phoenix/oauth-service/oauth/check_token"
+
+    phoenix_oauth2_redirect_uri :
+    \"https://qa.ird.mu-sigma.com/aops-dsc/auth/signin/callback"
+
+
+    phoenix_oauth2_logout_uri:
+    "https://qa.ird.mu-sigma.com/phoenix/oauth-service/logout?redirectUrl=https://qa.ird.mu-sigma.com/aops-dsc/auth/signout/callback"
+
+    phoenix_oauth2_userDetails_uri :
+    "https://qa.ird.mu-sigma.com/phoenix/oauth-service/oauth/check_token"
+
+
+
+
+    sso_logIn:
+    "https://eoc.mu-sigma.com/phoenix/authentication-service/login"
+
+    sso_auth:
+    "https://eoc.mu-sigma.com/phoenix/authentication-service/authorize"
+
+    sso_userDetails:
+    "https://eoc.mu-sigma.com/phoenix/admin-service/users/username/"
+
+    sso_2_auth:
+    "https://eoc.mu-sigma.com/phoenix/oauth-service/oauth/token"
+
+    sso_2_userDetails :
+    "https://eoc.mu-sigma.com/phoenix/oauth-service/oauth/check_token"
+
+    alfresco :
+    "https://qa.ird.mu-sigma.com/alfresco/api/-default-/public/alfresco/versions/1/nodes/"
+
+    default_node_id : "96cc1312-d28c-460e-9444-940da09e8701"
+
+    alfresc_new_content_upload_api :
+    "https://qa.ird.mu-sigma.com/alfresco/s/multipartFileUploadAPI"
+
+    alfresco_check_file_name :
+    "https://qa.ird.mu-sigma.com/alfresco/service/checkFileNameAPI?format=json"
+
+    alfresco_configurable_level_details :
+    "https://qa.ird.mu-sigma.com/alfresco/s/getConfigurableLevelDetails?format=json"
+
+    alfresco_content_noderef_pattern: "workspace://SpacesStore/"
+
+    eoc_rest: "https://eoc.mu-sigma.com/phoenix/eoc-rest-ui"
+
+    alfresco_auth_token: "Basic QWRtaW46QWxmcjNzYzBAMzIxNA=="
+
+    phoenix_access_token: "search_access_token"
+
+    eoc_enabled: false
+
+    phoenix_log: false
+
+    routingKeyPattern: "phoenix-logger-inqueue"
+
+    silent: false
+
+    host: '10.1.251.157'
+
+    port: 30672
+
+    vhost: 'logger'
+
+    login: 'local'
+
+    password: 'musigma123'
+
+    keepAlive: true
+
+    level: 'info'
+
+    appName: 'AOPS-UI'
+
+    separate_eoc_groupartifacts: false
+
+    userGroup: GROUP_Labs_HouseCreation

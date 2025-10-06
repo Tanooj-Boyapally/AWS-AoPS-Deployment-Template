@@ -1,0 +1,74 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  data:
+    environment.js: |
+      window.environment = {
+        backendRest: 'https://aws.eoc.mu-sigma.com/aops-rest',
+        oauthBase: 'https://eoc.mu-sigma.com/phoenix/oauth-service',
+        name: "prod",
+        version: '25.08.03',
+        singleTenant: true,
+        defaultTenant: 'eoc',
+        help: 'https://aops1.mu-sigma.com/aops-rest/admin/help/Content/AoPS%20Online%20Help.htm',
+        piwik: {
+          id: 18,
+          url: "https://ird.mu-sigma.com/piwik/"
+        },
+        quickLinks: {
+          all: 'https://eoc.mu-sigma.com/phoenix/eoc-rest-ui/quick-link/all',
+          submenu: 'https://eoc.mu-sigma.com/phoenix/eoc-rest-ui/subMenu-link'
+        },
+        easterEgg: {
+          img: 'https://ird.mu-sigma.com/wiki/images/d/de/Easteregg.jpg',
+          msg: 'Teamwork makes the dream work! Meet the team behind AoPS'
+        },
+        knowledgeBaseLinks: [
+          {
+            label: 'muLearn Course',
+            link: 'https://mulearn.mu-sigma.com/courses/art-of-problem-solving-aops-level-01/'
+          },
+          {
+            label: 'Release Notes',
+            link: ''
+          },
+          {
+            label: 'User Guide',
+            link: 'https://eoc.mu-sigma.com/aops-rest/admin/help/Content/AoPS%20Online%20Help.htm',
+          }
+        ],
+        horNodeTypes: ['Engagement', 'Transformation', 'Program', 'Project', 'Artifact'],
+        production: true,
+        locationFlag: 'https://eoc.mu-sigma.com/aops/logos/India.svg',
+        noFallback: false, // user image fallback
+        loginType: 0,
+        eocTenant: 'eoc',
+        isEoC: true,
+        EoCPath: 'https://eoc.mu-sigma.com/search',
+        sendDSCTaskMails: false,
+        emailNotificationWorkflowpath: 'https://qa.ird.mu-sigma.com/exposerestwebservice/muflow/runFlow/runWithVariables',
+        defaultGroupCreation: false,
+        defaultGroupName: 'EoC_All',
+        fromIndustry: false,
+        easterEggVisibility: true,
+        enableAkasa: true,
+        enableAI4NS: true,
+        enableAoPStoCode: false,
+        easterEggVisibility: true,
+        enableEoC: false,
+        talosRedirectLink: 'https://qa.ird.mu-sigma.com/mu-talos',
+        csaas: 'https://mu-sigma-2.wistia.com/medias/l2exdywvlg',
+        archVideo:'https://mu-sigma-2.wistia.com/medias/5hs0t26oib',
+        mysqlDatabase: 'aops_csv',
+        mysqlUser: 'root',
+        mysqlPassword: 'root',
+      };
+      window._paq = [];
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+    name: muaops-ui-env
+kind: List
+metadata:
+  resourceVersion: ""

@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aops-ui-deployment
+  namespace: aws-eoc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: muaops-ui
+  template:
+    metadata:
+      labels:
+        app: muaops-ui
+    spec:
+      containers:
+        - env:
+            - name: PORT
+              value: '8443'
+            - name: AOPS_BASE
+              value: /aops/
+          image: registry.ird.mu-sigma.com/muaops/muaops-ui:25.09.04
+          imagePullPolicy: Always
+          name: aops-ui-service
+          ports:
+            - containerPort: 8443
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 1
+              memory: 1536Mi
+            requests:
+              cpu: 500m
+              memory: 1Gi
+          volumeMounts:
+            - mountPath: /muaops/public/environment.js
+              name: muaops-ui-env
+              subPath: environment.js
+            # - mountPath: /muaops/public/logos/
+            #   name: client-logos-pv
+      imagePullSecrets:
+        - name: regcred
+      volumes:
+        - configMap:
+            name: muaops-ui-env
+          name: muaops-ui-env
+        # - name: client-logos-pv
+        #   persistentVolumeClaim:
+        #     claimName: client-logos-pv
+

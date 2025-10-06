@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: muaops-app-deployment
+  namespace: aws-eoc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: muaops-app
+  template:
+    metadata:
+      labels:
+        app: muaops-app
+    spec:
+      containers:
+        - name: muaops-app
+          image: registry.ird.mu-sigma.com/muaops/muaops-rest:25.09.04
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8090
+              protocol: TCP
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi
+            requests:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: muaops-app-config-map
+              mountPath: /muaops/app-config/app-properties.yml
+              subPath: app-properties.yml
+            - name: muaops-db-config-map
+              mountPath: /muaops/app-config/dbconfig
+              subPath: dbconfig
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: regcred
+      volumes:
+        - name: muaops-app-config-map
+          configMap:
+            name: muaops-app-properties-config-map
+        - name: muaops-db-config-map
+          configMap:
+            name: muaops-db-config-map
+

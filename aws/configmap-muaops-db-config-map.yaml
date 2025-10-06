@@ -1,0 +1,8 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: muaops-db-config-map
+  namespace: aws-eoc
+data:
+  dbconfig: >-
+    eyJ1c2VybmFtZSI6InNhIiwicGFzc3dvcmQiOiI5MmNkIiwiYWxnb3JpdGhtIjoiYWVzLTI1Ni1jdHIiLCJhbGdvSVYiOiIwNDYzZDc2ZGE5YTAxNWFkMjRmNjg5Y2YzY2M0ZmUyYyIsImFsZ29QYXNzd29yZCI6ImY0MWQzMjUwNjNlMjA4M2I4MzQ4Y2I2MGY0MTcyMGI2OWJiMWE2OGQ3NzJjOGEyOWVhMDNjZGY2YWQ2OTBkOTEiLCJzZXJ2ZXJVcmlEZXRhaWxzIjpbIm1vbmdvLXZlcnNpb24tOC1zdmM6MjcwMTciXSwiZGF0YWJhc2UiOiJnbG9iYWwiLCJyZXBsaWNhQ291bnQiOjF9

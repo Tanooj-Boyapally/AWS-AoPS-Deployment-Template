@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aops-ui-service
+  namespace: aws-eoc
+  annotations:
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTPS
+spec:
+  type: ClusterIP
+  selector:
+    app: muaops-ui
+  ports:
+    - name: https
+      port: 8443
+      targetPort: 8443
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: muaops-app-service
+  namespace: aws-eoc
+  annotations:
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
+    alb.ingress.kubernetes.io/healthcheck-path: /health-check
+spec:
+  type: ClusterIP
+  selector:
+    app: muaops-app
+  ports:
+    - name: https
+      port: 9443
+      targetPort: 9443
