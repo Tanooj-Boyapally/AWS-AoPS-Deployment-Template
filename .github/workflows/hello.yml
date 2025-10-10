@@ -111,60 +111,60 @@ jobs:
 
 
 
-  ebs_setup:
-    runs-on: self-hosted
-    # needs: setup
-    environment: production
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  # ebs_setup:
+  #   runs-on: self-hosted
+  #   # needs: setup
+  #   environment: production
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
 
-      - name: Verify Terraform is Available
-        run: |
-          which terraform
-          /usr/local/bin/terraform version
+  #     - name: Verify Terraform is Available
+  #       run: |
+  #         which terraform
+  #         /usr/local/bin/terraform version
 
-      - name: Configure Terraform Backend
-        working-directory: ./aws-ebs-setup
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          cat > backend.tf << EOF
-          terraform {
-            backend "s3" {
-              bucket  = "devops-terraform-state-backup"
-              key     = "ebs-setup/terraform.tfstate"
-              region  = "${{ secrets.AWS_REGION }}"
-              encrypt = true
-            }
-          }
-          EOF
+  #     - name: Configure Terraform Backend
+  #       working-directory: ./aws-ebs-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         cat > backend.tf << EOF
+  #         terraform {
+  #           backend "s3" {
+  #             bucket  = "devops-terraform-state-backup"
+  #             key     = "ebs-setup/terraform.tfstate"
+  #             region  = "${{ secrets.AWS_REGION }}"
+  #             encrypt = true
+  #           }
+  #         }
+  #         EOF
 
-      - name: Terraform Init
-        working-directory: ./aws-ebs-setup
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: /usr/local/bin/terraform init
+  #     - name: Terraform Init
+  #       working-directory: ./aws-ebs-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: /usr/local/bin/terraform init
 
-      - name: Terraform Plan
-        working-directory: ./aws-ebs-setup
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: /usr/local/bin/terraform plan -lock=false
+  #     - name: Terraform Plan
+  #       working-directory: ./aws-ebs-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: /usr/local/bin/terraform plan -lock=false
 
-      - name: Terraform Apply
-        working-directory: ./aws-ebs-setup
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: /usr/local/bin/terraform apply -auto-approve -lock=false
+  #     - name: Terraform Apply
+  #       working-directory: ./aws-ebs-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: /usr/local/bin/terraform apply -auto-approve -lock=false
 
   ebs_destroy:
     runs-on: self-hosted
