@@ -205,17 +205,16 @@ jobs:
 
   ebs_destroy:
     runs-on: self-hosted
-    # needs: setup
     environment: production
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
+  
       - name: Verify Terraform is Available
         run: |
           which terraform
           /usr/local/bin/terraform version
-
+  
       - name: Configure Terraform Backend
         working-directory: ./aws-ebs-setup
         env:
@@ -226,15 +225,14 @@ jobs:
           cat > backend.tf << EOF
           terraform {
             backend "s3" {
-              bucket         = "devops-terraform-state-backup"
-              key            = "ebs-setup/terraform.tfstate"
-              region         = "${{ secrets.AWS_REGION }}"
-              encrypt        = true
-              dynamodb_table = "terraform-locks"
+              bucket  = "devops-terraform-state-backup"
+              key     = "ebs-setup/terraform.tfstate"
+              region  = "${{ secrets.AWS_REGION }}"
+              encrypt = true
             }
           }
           EOF
-
+  
       - name: Terraform Init
         working-directory: ./aws-ebs-setup
         env:
@@ -242,22 +240,22 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
         run: /usr/local/bin/terraform init
-
+  
       - name: Terraform Plan (Destroy)
         working-directory: ./aws-ebs-setup
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: /usr/local/bin/terraform plan -destroy
-
+        run: /usr/local/bin/terraform plan -destroy -lock=false
+  
       - name: Terraform Destroy
         working-directory: ./aws-ebs-setup
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: /usr/local/bin/terraform destroy -auto-approve
+        run: /usr/local/bin/terraform destroy -auto-approve -lock=false
 
 
 
