@@ -31,6 +31,181 @@ jobs:
   #         fi
   #         /usr/local/bin/terraform version
 
+
+  # ==========================================
+  # STAGE 1: Create S3 Backend Infrastructure
+  # ==========================================
+  # s3_state_backend:
+  #   runs-on: self-hosted
+  #   environment: production
+  #   outputs:
+  #     state_bucket: ${{ steps.bucket_info.outputs.bucket_name }}
+  #     dynamodb_table: ${{ steps.bucket_info.outputs.table_name }}
+    
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Verify Terraform is Available
+  #       run: |
+  #         which terraform
+  #         /usr/local/bin/terraform version
+
+  #     - name: Terraform Init (S3 Backend)
+  #       working-directory: ./aws-s3-bucket-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         echo "🔧 Initializing Terraform for S3 state backend..."
+  #         /usr/local/bin/terraform init
+
+  #     - name: Terraform Plan (S3 Backend)
+  #       working-directory: ./aws-s3-bucket-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         echo "📋 Planning S3 backend infrastructure..."
+  #         /usr/local/bin/terraform plan
+
+  #     - name: Terraform Apply (S3 Backend)
+  #       working-directory: ./aws-s3-bucket-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         echo "🚀 Creating S3 backend infrastructure..."
+  #         /usr/local/bin/terraform apply -auto-approve
+
+  #     - name: Get S3 Backend Info
+  #       id: bucket_info
+  #       working-directory: ./aws-s3-bucket-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         echo "📊 Retrieving backend configuration..."
+  #         BUCKET_NAME=$(/usr/local/bin/terraform output -raw state_bucket_id)
+  #         TABLE_NAME=$(/usr/local/bin/terraform output -raw dynamodb_table_name)
+  #         echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
+  #         echo "table_name=$TABLE_NAME" >> $GITHUB_OUTPUT
+  #         echo "✅ S3 Bucket: $BUCKET_NAME"
+  #         echo "✅ DynamoDB Table: $TABLE_NAME"
+
+  #     - name: Display Backend Configuration
+  #       working-directory: ./aws-s3-bucket-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         echo "================================================"
+  #         echo "✅ S3 Backend Created Successfully!"
+  #         echo "================================================"
+  #         /usr/local/bin/terraform output backend_config
+
+
+
+  # ebs_setup:
+  #   runs-on: self-hosted
+  #   needs: setup
+  #   environment: production
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Verify Terraform is Available
+  #       run: |
+  #         which terraform
+  #         /usr/local/bin/terraform version
+
+  #     - name: Terraform Init
+  #       working-directory: ./aws-ebs-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: /usr/local/bin/terraform init
+
+  #     - name: Terraform Plan
+  #       working-directory: ./aws-ebs-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: /usr/local/bin/terraform plan
+
+  #     - name: Terraform Apply
+  #       working-directory: ./aws-ebs-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: /usr/local/bin/terraform apply -auto-approve
+
+ebs_setup:
+  runs-on: self-hosted
+  # needs: setup
+  environment: production
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Verify Terraform is Available
+      run: |
+        which terraform
+        /usr/local/bin/terraform version
+
+    - name: Configure Terraform Backend
+      working-directory: ./aws-ebs-setup
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+      run: |
+        cat > backend.tf << EOF
+        terraform {
+          backend "s3" {
+            bucket         = "devops-terraform-state-backup"
+            key            = "ebs-setup/terraform.tfstate"
+            region         = "${{ secrets.AWS_REGION }}"
+            encrypt        = true
+            dynamodb_table = "terraform-locks"
+          }
+        }
+        EOF
+
+    - name: Terraform Init
+      working-directory: ./aws-ebs-setup
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+      run: /usr/local/bin/terraform init
+
+    - name: Terraform Plan
+      working-directory: ./aws-ebs-setup
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+      run: /usr/local/bin/terraform plan
+
+    - name: Terraform Apply
+      working-directory: ./aws-ebs-setup
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+      run: /usr/local/bin/terraform apply -auto-approve
+
+
+
   # eks_setup:
   #   runs-on: self-hosted
   #   environment: production
@@ -83,42 +258,7 @@ jobs:
   #         kubectl cluster-info
 
 
-  # ebs_setup:
-  #   runs-on: self-hosted
-  #   needs: setup
-  #   environment: production
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v3
 
-  #     - name: Verify Terraform is Available
-  #       run: |
-  #         which terraform
-  #         /usr/local/bin/terraform version
-
-  #     - name: Terraform Init
-  #       working-directory: ./aws-ebs-setup
-  #       env:
-  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-  #       run: /usr/local/bin/terraform init
-
-  #     - name: Terraform Plan
-  #       working-directory: ./aws-ebs-setup
-  #       env:
-  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-  #       run: /usr/local/bin/terraform plan
-
-  #     - name: Terraform Apply
-  #       working-directory: ./aws-ebs-setup
-  #       env:
-  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-  #       run: /usr/local/bin/terraform apply -auto-approve
 
   # k8s_namespace_setup:
   #   runs-on: self-hosted
@@ -361,48 +501,48 @@ jobs:
           
   #         echo "ConfigMap verification complete"
 
-  deploy_applications:
-    runs-on: self-hosted
-    # needs: deploy_configmaps
-    environment: production
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  # deploy_applications:
+  #   runs-on: self-hosted
+  #   # needs: deploy_configmaps
+  #   environment: production
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
 
-      - name: Configure kubectl for EKS
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          # Update kubeconfig for the EKS cluster
-          aws eks --region us-east-1 update-kubeconfig --name devops-cluster
-          kubectl config set-context --current --namespace=aws-eoc
-          echo "Kubeconfig updated successfully"
+  #     - name: Configure kubectl for EKS
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         # Update kubeconfig for the EKS cluster
+  #         aws eks --region us-east-1 update-kubeconfig --name devops-cluster
+  #         kubectl config set-context --current --namespace=aws-eoc
+  #         echo "Kubeconfig updated successfully"
 
-      - name: Deploy Applications and Services
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          echo "Applying all Deployments and Services..."
-          kubectl apply -f aws-deployments/deploy/
-          echo "All Deployments and Services applied successfully"
+  #     - name: Deploy Applications and Services
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         echo "Applying all Deployments and Services..."
+  #         kubectl apply -f aws-deployments/deploy/
+  #         echo "All Deployments and Services applied successfully"
 
-      - name: Verify Deployments and Services
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          echo "Verifying Deployments..."
-          kubectl get deployments -n aws-eoc
+  #     - name: Verify Deployments and Services
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         echo "Verifying Deployments..."
+  #         kubectl get deployments -n aws-eoc
           
-          echo "Verifying Services..."
-          kubectl get services -n aws-eoc
+  #         echo "Verifying Services..."
+  #         kubectl get services -n aws-eoc
           
-          echo "Verifying Pods..."
-          kubectl get pods -n aws-eoc -o wide
+  #         echo "Verifying Pods..."
+  #         kubectl get pods -n aws-eoc -o wide
           
-          echo "Application deployment verification complete"
+  #         echo "Application deployment verification complete"
