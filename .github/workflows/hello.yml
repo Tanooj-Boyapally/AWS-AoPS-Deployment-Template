@@ -171,11 +171,10 @@ jobs:
           cat > backend.tf << EOF
           terraform {
             backend "s3" {
-              bucket         = "devops-terraform-state-backup"
-              key            = "ebs-setup/terraform.tfstate"
-              region         = "${{ secrets.AWS_REGION }}"
-              encrypt        = true
-              dynamodb_table = "terraform-locks"
+              bucket  = "devops-terraform-state-backup"
+              key     = "ebs-setup/terraform.tfstate"
+              region  = "${{ secrets.AWS_REGION }}"
+              encrypt = true
             }
           }
           EOF
@@ -194,7 +193,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: /usr/local/bin/terraform plan
+        run: /usr/local/bin/terraform plan -lock=false
 
       - name: Terraform Apply
         working-directory: ./aws-ebs-setup
@@ -202,7 +201,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: /usr/local/bin/terraform apply -auto-approve
+        run: /usr/local/bin/terraform apply -auto-approve -lock=false
 
 
 
