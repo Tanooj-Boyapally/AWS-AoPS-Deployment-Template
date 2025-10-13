@@ -21,6 +21,16 @@ on:
         required: true
         type: boolean
         default: false
+      run_eks_setup:
+        description: 'Run EKS setup job'
+        required: true
+        type: boolean
+        default: false
+      run_eks_destroy:
+        description: 'Run EKS destroy job'
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   setup:
@@ -240,56 +250,130 @@ jobs:
 
 
 
-  # eks_setup:
-  #   runs-on: self-hosted
-  #   environment: production
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v3
+  eks_setup:
+    runs-on: self-hosted
+    if: ${{ github.event.inputs.run_eks_setup == 'true' }}
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-  #     - name: Verify Terraform is Available
-  #       run: |
-  #         which terraform
-  #         /usr/local/bin/terraform version
+      - name: Verify Terraform is Available
+        run: |
+          which terraform
+          /usr/local/bin/terraform version
 
-  #     - name: Terraform Init
-  #       working-directory: ./aws-eks-setup
-  #       env:
-  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-  #       run: /usr/local/bin/terraform init
+      - name: Configure Terraform Backend
+        working-directory: ./aws-eks-setup
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          cat > backend.tf << EOF
+          terraform {
+            backend "s3" {
+              bucket  = "devops-terraform-state-backup"
+              key     = "eks-setup/terraform.tfstate"
+              region  = "${{ secrets.AWS_REGION }}"
+              encrypt = true
+            }
+          }
+          EOF
 
-  #     - name: Terraform Plan
-  #       working-directory: ./aws-eks-setup
-  #       env:
-  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-  #       run: /usr/local/bin/terraform plan
+      - name: Terraform Init
+        working-directory: ./aws-eks-setup
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: /usr/local/bin/terraform init
 
-  #     - name: Terraform Apply
-  #       working-directory: ./aws-eks-setup
-  #       env:
-  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-  #       run: /usr/local/bin/terraform apply -auto-approve
+      - name: Terraform Plan
+        working-directory: ./aws-eks-setup
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: /usr/local/bin/terraform plan -lock=false
+
+      - name: Terraform Apply
+        working-directory: ./aws-eks-setup
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: /usr/local/bin/terraform apply -auto-approve -lock=false
         
-  #     - name: Configure kubectl
-  #       env:
-  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-  #       run: |
-  #         # Update kubeconfig for the EKS cluster
-  #         aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name devops-cluster
+      - name: Configure kubectl
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          # Update kubeconfig for the EKS cluster
+          aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name devops-cluster
           
-  #         # Verify kubectl connection
-  #         kubectl get nodes
+          # Verify kubectl connection
+          kubectl get nodes
           
-  #         # Display cluster info
-  #         kubectl cluster-info
+          # Display cluster info
+          kubectl cluster-info
+
+  eks_destroy:
+    runs-on: self-hosted
+    if: ${{ github.event.inputs.run_eks_destroy == 'true' }}
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+  
+      - name: Verify Terraform is Available
+        run: |
+          which terraform
+          /usr/local/bin/terraform version
+  
+      - name: Configure Terraform Backend
+        working-directory: ./aws-eks-setup
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          cat > backend.tf << EOF
+          terraform {
+            backend "s3" {
+              bucket  = "devops-terraform-state-backup"
+              key     = "eks-setup/terraform.tfstate"
+              region  = "${{ secrets.AWS_REGION }}"
+              encrypt = true
+            }
+          }
+          EOF
+  
+      - name: Terraform Init
+        working-directory: ./aws-eks-setup
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: /usr/local/bin/terraform init
+  
+      - name: Terraform Plan (Destroy)
+        working-directory: ./aws-eks-setup
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: /usr/local/bin/terraform plan -destroy -lock=false
+  
+      - name: Terraform Destroy
+        working-directory: ./aws-eks-setup
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: /usr/local/bin/terraform destroy -auto-approve -lock=false
 
 
 
