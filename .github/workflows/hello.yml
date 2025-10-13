@@ -253,6 +253,7 @@ jobs:
 
   eks_setup:
     runs-on: self-hosted
+    needs: ebs_setup
     if: ${{ github.event.inputs.run_eks_setup == 'true' }}
     environment: production
     steps:
