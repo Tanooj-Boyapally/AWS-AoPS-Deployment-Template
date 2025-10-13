@@ -1,9 +1,6 @@
 name: Setup Terraform and Deploy EKS
 
 on:
-  # push:
-  #   branches:
-  #     - main
   workflow_dispatch:  # Also allows manual trigger
     inputs:
       run_setup:
