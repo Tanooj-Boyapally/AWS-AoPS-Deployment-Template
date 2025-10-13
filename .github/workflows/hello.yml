@@ -31,36 +31,7 @@ on:
         required: true
         type: boolean
         default: false
-      run_k8s_namespace_setup:
-        description: 'Run K8s namespace setup job'
-        required: true
-        type: boolean
-        default: false
-      run_deploy_storageclass:
-        description: 'Run deploy StorageClass job'
-        required: true
-        type: boolean
-        default: false
-      run_deploy_pv_pvc:
-        description: 'Run deploy PV/PVC job'
-        required: true
-        type: boolean
-        default: false
-      run_deploy_statefulset:
-        description: 'Run deploy StatefulSet job'
-        required: true
-        type: boolean
-        default: false
-      run_deploy_configmaps:
-        description: 'Run deploy ConfigMaps job'
-        required: true
-        type: boolean
-        default: false
-      run_deploy_applications:
-        description: 'Run deploy applications job'
-        required: true
-        type: boolean
-        default: false
+
 
 jobs:
   setup:
@@ -411,7 +382,6 @@ jobs:
 
   k8s_namespace_setup:
     runs-on: self-hosted
-    if: ${{ github.event.inputs.run_k8s_namespace_setup == 'true' }}
     needs: eks_setup
     environment: production
     steps:
@@ -464,7 +434,6 @@ jobs:
 
   deploy_storageclass:
     runs-on: self-hosted
-    if: ${{ github.event.inputs.run_deploy_storageclass == 'true' }}
     needs: k8s_namespace_setup
     environment: production
     steps:
@@ -504,7 +473,6 @@ jobs:
 
   deploy_pv_pvc:
     runs-on: self-hosted
-    if: ${{ github.event.inputs.run_deploy_pv_pvc == 'true' }}
     needs: deploy_storageclass
     environment: production
     steps:
@@ -571,7 +539,6 @@ jobs:
 
   deploy_statefulset:
     runs-on: self-hosted
-    if: ${{ github.event.inputs.run_deploy_statefulset == 'true' }}
     needs: deploy_pv_pvc
     environment: production
     steps:
@@ -614,7 +581,6 @@ jobs:
 
   deploy_configmaps:
     runs-on: self-hosted
-    if: ${{ github.event.inputs.run_deploy_configmaps == 'true' }}
     needs: k8s_namespace_setup
     environment: production
     steps:
@@ -658,7 +624,6 @@ jobs:
 
   deploy_applications:
     runs-on: self-hosted
-    if: ${{ github.event.inputs.run_deploy_applications == 'true' }}
     needs: deploy_configmaps
     environment: production
     steps:
