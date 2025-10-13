@@ -185,7 +185,7 @@ jobs:
 
   ebs_destroy:
     runs-on: self-hosted
-    if: ${{ github.event.inputs.run_setup == 'true' }}
+    if: ${{ github.event.inputs.run_ebs_destroy == 'true' }}
     environment: production
     steps:
       - name: Checkout repository
