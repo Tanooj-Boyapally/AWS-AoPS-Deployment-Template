@@ -665,3 +665,53 @@ jobs:
           kubectl get pods -n aws-eoc -o wide
           
           echo "Application deployment verification complete"
+
+  deploy_ingress:
+    runs-on: self-hosted
+    needs: deploy_applications
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure kubectl for EKS
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          # Update kubeconfig for the EKS cluster
+          aws eks --region us-east-1 update-kubeconfig --name devops-cluster
+          kubectl config set-context --current --namespace=aws-eoc
+          echo "Kubeconfig updated successfully"
+
+      - name: Deploy Ingress (ALB)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          echo "Applying Ingress configuration..."
+          kubectl apply -f aws-deployments/ingress/ingress.yaml
+          echo "Ingress applied successfully"
+
+      - name: Verify Ingress
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          echo "Verifying Ingress..."
+          kubectl get ingress -n aws-eoc
+          
+          echo "Waiting for ALB to be provisioned..."
+          sleep 30
+          
+          echo "Getting Ingress details..."
+          kubectl describe ingress aops-ingress -n aws-eoc
+          
+          echo "Getting ALB address..."
+          kubectl get ingress aops-ingress -n aws-eoc -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+          echo ""
+          
+          echo "Ingress verification complete"
