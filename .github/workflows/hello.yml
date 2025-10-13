@@ -323,6 +323,7 @@ jobs:
   eks_destroy:
     runs-on: self-hosted
     if: ${{ github.event.inputs.run_eks_destroy == 'true' }}
+    needs: [eks_setup]
     environment: production
     steps:
       - name: Checkout repository
