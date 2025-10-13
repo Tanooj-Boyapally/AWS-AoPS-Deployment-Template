@@ -5,31 +5,37 @@ on:
   #   branches:
   #     - main
   workflow_dispatch:  # Also allows manual trigger
+    inputs:
+      run_setup:
+        description: 'Run setup job'
+        required: true
+        type: boolean
+        default: true
 
 jobs:
-  # setup:
-  #   runs-on: self-hosted
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v3
+  setup:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-  #     - name: Install Terraform
-  #       run: |
-  #         if command -v terraform &> /dev/null; then
-  #           echo "Terraform is already installed"
-  #           /usr/local/bin/terraform version || terraform version
-  #         else
-  #           echo "Installing Terraform..."
-  #           TERRAFORM_VERSION="1.9.8"
-  #           cd /tmp
-  #           wget -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-  #           unzip -o terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-  #           sudo mv terraform /usr/local/bin/
-  #           sudo chmod +x /usr/local/bin/terraform
-  #           rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-  #           echo "Terraform installed successfully"
-  #         fi
-  #         /usr/local/bin/terraform version
+      - name: Install Terraform
+        run: |
+          if command -v terraform &> /dev/null; then
+            echo "Terraform is already installed"
+            /usr/local/bin/terraform version || terraform version
+          else
+            echo "Installing Terraform..."
+            TERRAFORM_VERSION="1.9.8"
+            cd /tmp
+            wget -q https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+            unzip -o terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+            sudo mv terraform /usr/local/bin/
+            sudo chmod +x /usr/local/bin/terraform
+            rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+            echo "Terraform installed successfully"
+          fi
+          /usr/local/bin/terraform version
 
 
   # ==========================================
@@ -166,59 +172,59 @@ jobs:
   #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
   #       run: /usr/local/bin/terraform apply -auto-approve -lock=false
 
-  ebs_destroy:
-    runs-on: self-hosted
-    environment: production
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  # ebs_destroy:
+  #   runs-on: self-hosted
+  #   environment: production
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
   
-      - name: Verify Terraform is Available
-        run: |
-          which terraform
-          /usr/local/bin/terraform version
+  #     - name: Verify Terraform is Available
+  #       run: |
+  #         which terraform
+  #         /usr/local/bin/terraform version
   
-      - name: Configure Terraform Backend
-        working-directory: ./aws-ebs-setup
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          cat > backend.tf << EOF
-          terraform {
-            backend "s3" {
-              bucket  = "devops-terraform-state-backup"
-              key     = "ebs-setup/terraform.tfstate"
-              region  = "${{ secrets.AWS_REGION }}"
-              encrypt = true
-            }
-          }
-          EOF
+  #     - name: Configure Terraform Backend
+  #       working-directory: ./aws-ebs-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: |
+  #         cat > backend.tf << EOF
+  #         terraform {
+  #           backend "s3" {
+  #             bucket  = "devops-terraform-state-backup"
+  #             key     = "ebs-setup/terraform.tfstate"
+  #             region  = "${{ secrets.AWS_REGION }}"
+  #             encrypt = true
+  #           }
+  #         }
+  #         EOF
   
-      - name: Terraform Init
-        working-directory: ./aws-ebs-setup
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: /usr/local/bin/terraform init
+  #     - name: Terraform Init
+  #       working-directory: ./aws-ebs-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: /usr/local/bin/terraform init
   
-      - name: Terraform Plan (Destroy)
-        working-directory: ./aws-ebs-setup
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: /usr/local/bin/terraform plan -destroy -lock=false
+  #     - name: Terraform Plan (Destroy)
+  #       working-directory: ./aws-ebs-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: /usr/local/bin/terraform plan -destroy -lock=false
   
-      - name: Terraform Destroy
-        working-directory: ./aws-ebs-setup
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-        run: /usr/local/bin/terraform destroy -auto-approve -lock=false
+  #     - name: Terraform Destroy
+  #       working-directory: ./aws-ebs-setup
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  #       run: /usr/local/bin/terraform destroy -auto-approve -lock=false
 
 
 
