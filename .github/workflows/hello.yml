@@ -647,6 +647,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
         run: |
+          kubectl create secret docker-registry regcred   --docker-server=registry.ird.mu-sigma.com   --docker-username=musigma   --docker-password=Crunchdata! -n aws-eoc
           echo "Applying all Deployments and Services..."
           kubectl apply -f aws-deployments/deploy/
           echo "All Deployments and Services applied successfully"
